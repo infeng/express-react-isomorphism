@@ -13,6 +13,9 @@ const rootReducer = handleActions({
   count: 0,
 });
 
-const appReducer = combineReducers({rootReducer, routing});
+const appReducer = combineReducers({
+  app: rootReducer,
+  routing,
+});
 
 export default appReducer;

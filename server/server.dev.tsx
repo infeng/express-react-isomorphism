@@ -12,6 +12,7 @@ import * as http from 'http';
 import applyMiddlewares from './applyMiddlewares';
 let compiler = webpack(webpackConfig);
 import routes from './routes';
+const chokidar = require('chokidar');
 
 app.use(webpackDevMiddleware(compiler, {
   noInfo: true,
@@ -41,7 +42,7 @@ applyMiddlewares(app);
 // 设置静态目录
 app.use(express.static(path.join(__dirname, '/build/public/static')));
 
-app.use('/', routes);
+app.use('*', routes);
 
 const server = http.createServer(app);
 
