@@ -4,7 +4,8 @@
     "module": "commonjs",
     "sourceMap": true,
     "removeComments": true,
-    "jsx":"react"
+    "jsx": "react",
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "./**/*"

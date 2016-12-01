@@ -1,5 +1,13 @@
 process.env.NODE_ENV = 'development';
 
+require('ignore-styles').default(['.less', '.css']);
+
+require('asset-require-hook')({
+  extensions: ['jpg', 'jpeg', 'png', 'gif', 'svg', 'tif', 'tiff', 'webp'],
+  name: '/[sha512:hash:base64:7].[ext]',
+  limit: 10000,
+});
+
 import * as express from 'express';
 const app = express();
 import * as path from 'path';
@@ -7,12 +15,11 @@ import * as ejs from 'ejs';
 let webpackDevMiddleware = require('webpack-dev-middleware');
 let webpackHotMiddleware = require('webpack-hot-middleware');
 let webpack = require('webpack');
-let webpackConfig = require('../webpack.dev.js');
+let webpackConfig = require('../webpack.config.js')[0];
 import * as http from 'http';
 import applyMiddlewares from './applyMiddlewares';
 let compiler = webpack(webpackConfig);
 import routes from './routes';
-const chokidar = require('chokidar');
 
 app.use(webpackDevMiddleware(compiler, {
   noInfo: true,

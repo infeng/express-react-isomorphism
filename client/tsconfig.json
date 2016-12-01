@@ -2,9 +2,9 @@
   "compilerOptions": {
     "target": "es6",
     "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
     "jsx": "preserve",
     "declaration": false,
+    "allowSyntheticDefaultImports": true,
     "sourceMap": true
   },
   "include": [

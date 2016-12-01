@@ -3,5 +3,5 @@
 ## Todo
 
 - [X] router isomorphism
-- [ ] add production
+- [X] add production
 - [ ] resolve hot reload when use typescript
