@@ -7,14 +7,14 @@ import applyMiddlewares from './applyMiddlewares';
 import routes from './routes';
 
 // 设置渲染模板
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', path.join(__dirname, './views'));
 app.engine('html', ejs.renderFile);
 app.set('view engine', 'html');
 
 applyMiddlewares(app);
 
 // 设置静态目录
-app.use(express.static(path.join(__dirname, '../build/public/static')));
+app.use(express.static(path.join(__dirname, '../public/static')));
 
 app.use('*', routes);
 

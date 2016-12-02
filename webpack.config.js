@@ -6,6 +6,7 @@ var rucksack = require('rucksack-css');
 var autoprefixer = require('autoprefixer');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var UglifyJsPlugin = webpack.optimize.UglifyJsPlugin;
+var HtmlWebpackPlugin = require('html-webpack-plugin');
 
 let entry = {
   index: [
@@ -35,6 +36,16 @@ if (process.env.NODE_ENV === 'production') {
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify('production'),
       __SERVER__: false
+    }),
+    new HtmlWebpackPlugin({
+      filename: '../../server/views/index.html',
+      template: './server/views/index.prod.html',
+      inject: true,
+      minify: {
+        removeComments: true,
+        collapseWhitespace: false,   
+      },
+      hash: true,
     }),
   ]);
 }
@@ -98,7 +109,7 @@ let clientConfig = {
       loader: 'json',
     }, {
       test: /\.html?$/,
-      loader: 'file?name=[name].[ext]',
+      loader: 'html?name=[name].[ext]', 
     }],
   },
   postcss: [
@@ -122,13 +133,15 @@ if (process.env.NODE_ENV === 'production') {
     .filter(function (i) {
       return ['.bin', '.npminstall'].indexOf(i) === -1
     });  
-  babelQuery.plugins.push(
-    ["babel-plugin-transform-require-ignore", {
-      "extensions": [".less", ".css"]
-    }]    
-  );
+  let serverBabelQuery = Object.assign({}, babelQuery, {
+    plugins: babelQuery.plugins.concat(
+      [["babel-plugin-transform-require-ignore", {
+        "extensions": [".less", ".css"]
+      }]]   
+    ),
+  });
   let serverConfig = {
-    babel: babelQuery,
+    babel: serverBabelQuery,
     ts: {
       transpileOnly: true,
       configFileName: './server/tsconfig.json',
