@@ -5,3 +5,4 @@
 - [X] router isomorphism
 - [X] add production
 - [ ] resolve hot reload when use typescript
+- [X] add debug in vscode
