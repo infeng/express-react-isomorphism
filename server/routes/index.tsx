@@ -24,6 +24,7 @@ router.use((req, res, next) => {
           <RouterContext {...renderProps}/>
         </Provider>,
       );
+      console.log(html);
       res.render('index', {
         title: 'qqmadmin-ssr',
         html: html,

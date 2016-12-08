@@ -7,6 +7,8 @@ var autoprefixer = require('autoprefixer');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var UglifyJsPlugin = webpack.optimize.UglifyJsPlugin;
 var HtmlWebpackPlugin = require('html-webpack-plugin');
+var createWitPlugin = require('webpack-isomorphic-tools/plugin');
+var witPlugin = new createWitPlugin(require('./webpack-isomorphic-tools-configuration'));
 
 let entry = {
   index: [
@@ -30,9 +32,9 @@ let clientPlugins = [
 ];
 if (process.env.NODE_ENV === 'production') {
   clientPlugins = clientPlugins.concat([
-    new UglifyJsPlugin({
-      compress: { warnings: false }
-    }),
+    // new UglifyJsPlugin({
+    //   compress: { warnings: false }
+    // }),
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify('production'),
       __SERVER__: false
@@ -84,8 +86,31 @@ let clientConfig = {
       exclude: /node_modules/,
       loaders: ['react-hot', 'babel', 'ts'],
     }, {
-      test: /\.less$/,
-      loader: ExtractTextPlugin.extract(['css?sourceMap&-autoprefixer!', 'postcss', 'less?sourceMap']),      
+      test: /\.css$/,
+      loader: ExtractTextPlugin.extract(
+        `${require.resolve('css-loader')}` +
+        `?sourceMap&-restructuring&-autoprefixer!${require.resolve('postcss-loader')}`
+      ),             
+    }, {
+      test(filePath) {
+        return /\.less$/.test(filePath) && /node_modules/.test(filePath);
+      },
+      loader: ExtractTextPlugin.extract(
+        `${require.resolve('css-loader')}?` +
+        `sourceMap&localIdentName=[local]___[hash:base64:5]&-autoprefixer!` +
+        `${require.resolve('postcss-loader')}!` +
+        `${require.resolve('less-loader')}?`
+      ), 
+    }, {
+      test(filePath) {
+        return /\.less$/.test(filePath) && !/node_modules/.test(filePath);
+      },
+      loader: ExtractTextPlugin.extract(
+        `${require.resolve('css-loader')}?` +
+        `sourceMap&modules&localIdentName=[local]___[hash:base64:5]&-autoprefixer!` +
+        `${require.resolve('postcss-loader')}!` +
+        `${require.resolve('less-loader')}?`
+      ),       
     }, {
       test: /\.woff(\?v=\d+\.\d+\.\d+)?$/,
       loader: `url?limit=10000&minetype=application/font-woff`, 
@@ -134,11 +159,11 @@ if (process.env.NODE_ENV === 'production') {
       return ['.bin', '.npminstall'].indexOf(i) === -1
     });  
   let serverBabelQuery = Object.assign({}, babelQuery, {
-    plugins: babelQuery.plugins.concat(
-      [["babel-plugin-transform-require-ignore", {
-        "extensions": [".less", ".css"]
-      }]]   
-    ),
+    // plugins: babelQuery.plugins.concat(
+    //   [["babel-plugin-transform-require-ignore", {
+    //     "extensions": [".less", ".css"]
+    //   }]]   
+    // ),
   });
   let serverConfig = {
     babel: serverBabelQuery,
@@ -182,20 +207,34 @@ if (process.env.NODE_ENV === 'production') {
       }, {
         test:  /\.(png|jpg|jpeg|gif)(\?v=\d+\.\d+\.\d+)?$/i,
         loader: 'url?limit=10000&name=[sha512:hash:base64:7].[ext]',        
+      }, {
+        test: /\.module\.less$/,
+        loader: 'css-loader/locals?module!less-loader',        
+      }, {
+        test: /\.less$/,
+        loader: 'null',         
       }],
     },
     resolve: {
       extensions: ['', '.ts', '.tsx', '.js', '.jsx'],
     },
     plugins: [
-      new webpack.optimize.DedupePlugin(),
-      new UglifyJsPlugin({
-        compress: { warnings: false }
+      new ExtractTextPlugin('[name].css', {
+        disable: false,
+        allChunks: true,
       }),
+      new webpack.optimize.DedupePlugin(),
       new webpack.DefinePlugin({
         'process.env.NODE_ENV': JSON.stringify('production'),
+      }),
+      witPlugin,
+    ],
+    postcss: [
+      rucksack(),
+      autoprefixer({
+        browsers: ['last 2 versions', 'Firefox ESR', '> 1%', 'ie >= 8']
       })
-    ]    
+    ],         
   };
   configs.push(serverConfig);
 }
