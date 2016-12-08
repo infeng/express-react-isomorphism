@@ -1,4 +1,5 @@
 console.log(process.env.NODE_ENV);
+let isDebug = process.env.NODE_ENV === 'development';
 
 var webpack = require('webpack');
 var path = require('path');
@@ -76,6 +77,7 @@ let clientConfig = {
   resolve: {
     extensions: ['', '.ts', '.tsx', '.js', '.jsx'],
   },
+  target: 'web',
   module: {
     loaders: [{
       test: /\.jsx?$/,
@@ -144,6 +146,9 @@ let clientConfig = {
     })
   ],  
   plugins: clientPlugins,
+  stats: {
+    colors: true,
+  },  
 };
 
 if (process.env.NODE_ENV === 'development') {
@@ -152,91 +157,90 @@ if (process.env.NODE_ENV === 'development') {
 
 let configs = [clientConfig];
 
-if (process.env.NODE_ENV === 'production') {
-  var fs = require('fs');
-  var nodeModules = fs.readdirSync('node_modules')
-    .filter(function (i) {
-      return ['.bin', '.npminstall'].indexOf(i) === -1
-    });  
-  let serverBabelQuery = Object.assign({}, babelQuery, {
-    // plugins: babelQuery.plugins.concat(
-    //   [["babel-plugin-transform-require-ignore", {
-    //     "extensions": [".less", ".css"]
-    //   }]]   
-    // ),
-  });
-  let serverConfig = {
-    babel: serverBabelQuery,
-    ts: {
-      transpileOnly: true,
-      configFileName: './server/tsconfig.json',
-      compilerOptions: {
-        sourceMap: false,
-      },
-    },     
-    entry: ['./server/server.tsx'],
-    output: {
-      path: path.join(__dirname, '/build/server'),
-      filename: 'index.js',
-      publicPath: '/',
+var fs = require('fs');
+var nodeModules = fs.readdirSync('node_modules')
+  .filter(function (i) {
+    return ['.bin', '.npminstall'].indexOf(i) === -1
+  });  
+let serverBabelQuery = Object.assign({}, babelQuery, {
+  // plugins: babelQuery.plugins.concat(
+  //   [["babel-plugin-transform-require-ignore", {
+  //     "extensions": [".less", ".css"]
+  //   }]]   
+  // ),
+});
+let serverConfig = {
+  babel: serverBabelQuery,
+  ts: {
+    transpileOnly: true,
+    configFileName: './server/tsconfig.json',
+    compilerOptions: {
+      sourceMap: false,
     },
-    target: 'node',
-    node: {
-      fs: 'empty',
-      __dirname: true,
-      __filename: true
-    },
-    externals: [
-      function (context, request, callback) {
-        var pathStart = request.split('/')[0]
-        if (pathStart && (pathStart[0] === '!') || nodeModules.indexOf(pathStart) >= 0 && request !== 'webpack/hot/signal.js') {
-          return callback(null, 'commonjs ' + request)
-        }
-        callback()
+  },     
+  entry: ['./server/server.tsx'],
+  output: {
+    path: path.join(__dirname, '/build/server'),
+    filename: 'index.js',
+    publicPath: '/',
+  },
+  target: 'node',
+  node: {
+    fs: 'empty',
+    __dirname: true,
+    __filename: true
+  },
+  externals: [
+    function (context, request, callback) {
+      var pathStart = request.split('/')[0]
+      if (pathStart && (pathStart[0] === '!') || nodeModules.indexOf(pathStart) >= 0 && request !== 'webpack/hot/signal.js') {
+        return callback(null, 'commonjs ' + request)
       }
-    ],    
-    module: {
-      loaders: [{
-        test: /\.jsx?$/,
-        exclude: /node_modules/,
-        loaders: ['babel'],       
-      }, {
-        test: /\.tsx?$/,
-        exclude: /node_modules/,
-        loaders: ['babel', 'ts'],
-      }, {
-        test:  /\.(png|jpg|jpeg|gif)(\?v=\d+\.\d+\.\d+)?$/i,
-        loader: 'url?limit=10000&name=[sha512:hash:base64:7].[ext]',        
-      }, {
-        test: /\.module\.less$/,
-        loader: 'css-loader/locals?module!less-loader',        
-      }, {
-        test: /\.less$/,
-        loader: 'null',         
-      }],
-    },
-    resolve: {
-      extensions: ['', '.ts', '.tsx', '.js', '.jsx'],
-    },
-    plugins: [
-      new ExtractTextPlugin('[name].css', {
-        disable: false,
-        allChunks: true,
-      }),
-      new webpack.optimize.DedupePlugin(),
-      new webpack.DefinePlugin({
-        'process.env.NODE_ENV': JSON.stringify('production'),
-      }),
-      witPlugin,
-    ],
-    postcss: [
-      rucksack(),
-      autoprefixer({
-        browsers: ['last 2 versions', 'Firefox ESR', '> 1%', 'ie >= 8']
-      })
-    ],         
-  };
-  configs.push(serverConfig);
-}
+      callback()
+    }
+  ],    
+  module: {
+    loaders: [{
+      test: /\.jsx?$/,
+      exclude: /node_modules/,
+      loaders: ['babel'],       
+    }, {
+      test: /\.tsx?$/,
+      exclude: /node_modules/,
+      loaders: ['babel', 'ts'],
+    }, {
+      test:  /\.(png|jpg|jpeg|gif)(\?v=\d+\.\d+\.\d+)?$/i,
+      loader: 'url?limit=10000&name=[sha512:hash:base64:7].[ext]',        
+    }, {
+      test: /\.module\.less$/,
+      loader: 'css-loader/locals?module!less-loader',        
+    }, {
+      test: /\.less$/,
+      loader: 'null',         
+    }],
+  },
+  resolve: {
+    extensions: ['', '.ts', '.tsx', '.js', '.jsx'],
+  },
+  plugins: [
+    new ExtractTextPlugin('[name].css', {
+      disable: false,
+      allChunks: true,
+    }),
+    new webpack.optimize.DedupePlugin(),
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+    }),
+    witPlugin,
+  ],
+  postcss: [
+    rucksack(),
+    autoprefixer({
+      browsers: ['last 2 versions', 'Firefox ESR', '> 1%', 'ie >= 8']
+    })
+  ],
+  devtool: isDebug ? 'cheap-module-source-map' : 'source-map',
+};
+configs.push(serverConfig);
 
 module.exports = configs;

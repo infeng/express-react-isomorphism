@@ -9,7 +9,8 @@
     "lint": "tslint -c tslint.json client/**/*.ts client/**/*.tsx",
     "build": "rm -rf build && NODE_ENV=production gulp build",
     "prod": "cd build && node server/index.js",
-    "tsc": "tsc --outDir tslib"
+    "tsc": "tsc --outDir tslib",
+    "start2": "rm -rf build && NODE_ENV=development babel-node tools/start"
   },
   "repository": {
     "type": "git",
@@ -25,6 +26,29 @@
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/infeng/express-react-isomorphism/issues"
+  },
+  "babel": {
+    "presets": [
+      "react",
+      "stage-0"
+    ],
+    "plugins": [
+      "syntax-trailing-function-commas",
+      "transform-async-to-generator",
+      "transform-es2015-destructuring",
+      "transform-es2015-parameters",
+      "transform-es2015-duplicate-keys",
+      "transform-es2015-modules-commonjs",
+      "transform-exponentiation-operator",
+      "transform-runtime"
+    ],
+    "env": {
+      "test": {
+        "plugins": [
+          "rewire"
+        ]
+      }
+    }
   },
   "dependencies": {
     "@types/body-parser": "0.0.33",
@@ -96,7 +120,9 @@
     "webpack-stream": "^3.2.0"
   },
   "devDependencies": {
+    "http-proxy-middleware": "^0.17.3",
     "null-loader": "^0.1.1",
-    "webpack-isomorphic-tools": "^2.6.4"
+    "webpack-isomorphic-tools": "^2.6.4",
+    "webpack-middleware": "^1.5.1"
   }
 }

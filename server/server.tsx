@@ -20,6 +20,7 @@ app.use('*', routes);
 
 const server = http.createServer(app);
 
-server.listen(8048, (err) => {
-  console.log('server listening on port: 8048');
+let port = 8038;
+server.listen(port, (err) => {
+  console.log(`The server is running at http://localhost:${port}/`);
 });
